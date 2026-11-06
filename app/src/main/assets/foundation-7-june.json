@@ -1,0 +1,409 @@
+{
+    "name": "Foundation Strength 4-Day Program",
+    "version": "1.0",
+    "goal": [
+      "Build muscle",
+      "Increase strength",
+      "Support fat loss",
+      "Complement 4x weekly running"
+    ],
+    "schedule": {
+      "day1": "Upper A + Run",
+      "day2": "Lower A + Run",
+      "day3": "Rest",
+      "day4": "Upper B + Run",
+      "day5": "Rest",
+      "day6": "Lower B + Run",
+      "day7": "Rest"
+    },
+    "globalNotes": [
+      "Warm up for 5-10 minutes before lifting.",
+      "Use a weight that leaves 1-3 reps in reserve (RIR) at the end of each set.",
+      "Rest 2-3 minutes between compound exercises.",
+      "Rest 60-90 seconds between isolation exercises.",
+      "Focus on controlled movement rather than moving weight quickly.",
+      "Track weights and reps every session.",
+      "When all sets reach the top of the rep range, increase weight by the smallest available increment.",
+      "Protein target: 1.6-2.2g per kg bodyweight daily.",
+      "Sleep 7-9 hours per night.",
+      "Consistency matters more than exercise variety."
+    ],
+    "progression": {
+      "method": "Double Progression",
+      "example": {
+        "exercise": "Leg Press",
+        "week1": ["100kg x 10", "100kg x 10", "100kg x 9", "100kg x 8"],
+        "week2": ["100kg x 12", "100kg x 11", "100kg x 10", "100kg x 10"],
+        "week3": ["100kg x 12", "100kg x 12", "100kg x 12", "100kg x 12"],
+        "nextStep": "Increase to 105kg"
+      }
+    },
+    "weeks": {
+      "week1-2": [
+        "Learn technique.",
+        "Leave 2-3 reps in reserve.",
+        "Do not train to failure."
+      ],
+      "week3-6": [
+        "Begin pushing closer to the top of rep ranges.",
+        "Increase weights where appropriate."
+      ],
+      "week7-8": [
+        "Review progress.",
+        "Compare strength numbers to Week 1.",
+        "Consider a lighter week if feeling fatigued."
+      ]
+    },
+    "workouts": {
+      "upperA": {
+        "name": "Upper A",
+        "exercises": [
+          {
+            "name": "Row Machine",
+            "sets": 3,
+            "reps": "8-12",
+            "muscles": ["Lats", "Rhomboids", "Rear delts", "Biceps", "Mid traps"],
+            "notes": [
+              "Pull elbows toward hips.",
+              "Avoid shrugging shoulders.",
+              "Control the return."
+            ]
+          },
+          {
+            "name": "Lat Pulldown",
+            "sets": 3,
+            "reps": "8-12",
+            "muscles": ["Lats", "Biceps", "Rear delts"],
+            "notes": [
+              "Pull to upper chest.",
+              "Lead with elbows.",
+              "Avoid leaning back excessively."
+            ]
+          },
+          {
+            "name": "Shoulder Press Machine",
+            "sets": 3,
+            "reps": "8-12",
+            "muscles": ["Front delts", "Side delts", "Triceps"],
+            "notes": [
+              "Keep core tight.",
+              "Press overhead smoothly.",
+              "Avoid locking out aggressively."
+            ]
+          },
+          {
+            "name": "Chest Press Machine",
+            "sets": 3,
+            "reps": "8-12",
+            "muscles": ["Chest", "Front delts", "Triceps"],
+            "refVideo": "https://www.youtube.com/shorts/Qu7-ceCvq7w",
+            "notes": [
+              "Primary chest movement.",
+              "Shoulder blades pinned back.",
+              "Control the lowering phase.",
+              "Press explosively but under control."
+            ]
+          },
+          {
+            "name": "Pectoral Fly Machine",
+            "sets": 3,
+            "reps": "10-15",
+            "muscles": ["Chest"],
+            "notes": [
+              "Slight bend in elbows.",
+              "Focus on chest contraction.",
+              "Use controlled tempo."
+            ]
+          },
+          {
+            "name": "Rear Delt Machine",
+            "sets": 2,
+            "reps": "12-15",
+            "muscles": ["Rear delts", "Rhomboids"],
+            "notes": [
+              "Move through full range.",
+              "Keep shoulders down."
+            ]
+          },
+          {
+            "name": "Push-Ups",
+            "sets": 3,
+            "reps": "Near failure",
+            "muscles": ["Chest", "Front delts", "Triceps", "Core"],
+            "notes": [
+              "Use full range of motion.",
+              "Chest close to floor.",
+              "Maintain straight body line."
+            ]
+          },
+          {
+            "name": "Plank",
+            "sets": 3,
+            "duration": "30-60 seconds",
+            "seconds": "",
+            "muscles": ["Abs", "Obliques", "Lower back"],
+            "notes": [
+              "Brace core.",
+              "Do not let hips sag."
+            ]
+          }
+        ]
+      },
+      "lowerA": {
+        "name": "Lower A",
+        "exercises": [
+          {
+            "name": "Leg Press",
+            "sets": 4,
+            "reps": "8-12",
+            "muscles": ["Quads", "Glutes"],
+            "notes": [
+              "Lower under control.",
+              "Push through full foot.",
+              "Avoid bouncing."
+            ]
+          },
+          {
+            "name": "Romanian Deadlift",
+            "sets": 3,
+            "reps": "8-12",
+            "muscles": [
+              "Hamstrings",
+              "Glutes",
+              "Lower back",
+              "Core"
+            ],
+            "notes": [
+              "Push hips backwards.",
+              "Maintain neutral spine.",
+              "Keep bar or dumbbells close to legs.",
+              "Feel a stretch in hamstrings.",
+              "Do not round lower back."
+            ]
+          },
+          {
+            "name": "Seated Leg Curl",
+            "sets": 3,
+            "reps": "10-15",
+            "muscles": ["Hamstrings"],
+            "notes": [
+              "Pause briefly at contraction.",
+              "Control lowering phase."
+            ]
+          },
+          {
+            "name": "Walking Lunges",
+            "sets": 3,
+            "reps": "10-12 per leg",
+            "muscles": ["Quads", "Glutes", "Hamstrings"],
+            "notes": [
+              "Take controlled steps.",
+              "Keep torso upright."
+            ]
+          },
+          {
+            "name": "Leg Extension",
+            "sets": 2,
+            "reps": "12-15",
+            "muscles": ["Quads"],
+            "notes": [
+              "Skip if doing Romanian Deadlift.",
+              "Avoid swinging.",
+              "Pause at top."
+            ]
+          },
+          {
+            "name": "Calf Raises",
+            "sets": 3,
+            "reps": "12-20",
+            "muscles": ["Calves"],
+            "notes": [
+              "Use full stretch.",
+              "Pause at top."
+            ]
+          },
+          {
+            "name": "Crunches or Leg Raises",
+            "sets": 3,
+            "reps": "10-20",
+            "muscles": ["Abs", "Hip flexors"],
+            "refVideo": "https://www.youtube.com/shorts/fbGDQGHxvHk",
+            "notes": [
+              "Control movement.",
+              "Avoid using momentum."
+            ]
+          }
+        ]
+      },
+      "upperB": {
+        "name": "Upper B",
+        "exercises": [
+          {
+            "name": "Lat Pulldown",
+            "sets": 3,
+            "reps": "8-12",
+            "muscles": ["Lats", "Biceps", "Rear delts"],
+            "notes": [
+              "Use a different grip from Upper A if possible."
+            ]
+          },
+          {
+            "name": "Row Machine",
+            "sets": 3,
+            "reps": "8-12",
+            "muscles": ["Lats", "Rhomboids", "Rear delts", "Biceps", "Mid traps"],
+            "notes": [
+              "Focus on squeezing shoulder blades together."
+            ]
+          },
+          {
+            "name": "Shoulder Press Machine",
+            "sets": 3,
+            "reps": "8-12",
+            "muscles": ["Front delts", "Side delts", "Triceps"],
+            "notes": [
+              "Maintain steady tempo."
+            ]
+          },
+          {
+            "name": "Chest Press Machine",
+            "sets": 3,
+            "reps": "8-12",
+            "muscles": ["Chest", "Front delts", "Triceps"],
+            "notes": [
+              "Primary chest movement.",
+              "Shoulder blades pinned back.",
+              "Control the lowering phase.",
+              "Press explosively but under control."
+            ]
+          },
+          {
+            "name": "Pectoral Fly Machine",
+            "sets": 2,
+            "reps": "10-15",
+            "muscles": ["Chest"],
+            "notes": [
+              "Prioritize range of motion over weight."
+            ]
+          },
+          {
+            "name": "Rear Delt Machine",
+            "sets": 2,
+            "reps": "12-15",
+            "muscles": ["Rear delts", "Rhomboids"],
+            "notes": [
+              "Avoid using momentum."
+            ]
+          },
+          {
+            "name": "Push-Ups",
+            "sets": 3,
+            "reps": "Near failure",
+            "muscles": ["Chest", "Front delts", "Triceps", "Core"],
+            "notes": [
+              "Stop when form breaks down."
+            ]
+          },
+          {
+            "name": "Side Plank",
+            "sets": 3,
+            "seconds": "",
+            "duration": "20-45 seconds each side",
+            "muscles": ["Obliques", "Abs", "Glute medius"],
+            "notes": [
+              "Keep body straight."
+            ]
+          }
+        ]
+      },
+      "lowerB": {
+        "name": "Lower B",
+        "exercises": [
+          {
+            "name": "Leg Press",
+            "sets": 4,
+            "reps": "10-15",
+            "muscles": ["Quads", "Glutes"],
+            "notes": [
+              "Slightly higher reps than Lower A."
+            ]
+          },
+          {
+            "name": "Romanian Deadlift",
+            "sets": 3,
+            "reps": "8-12",
+            "muscles": [
+              "Hamstrings",
+              "Glutes",
+              "Lower back",
+              "Core"
+            ],
+            "refVideo": "https://www.youtube.com/shorts/hu3jRvTc_po",
+            "notes": [
+              "Push hips backwards.",
+              "Maintain neutral spine.",
+              "Keep bar or dumbbells close to legs.",
+              "Feel a stretch in hamstrings.",
+              "Do not round lower back."
+            ]
+          },
+          {
+            "name": "Seated Leg Curl",
+            "sets": 3,
+            "reps": "10-15",
+            "muscles": ["Hamstrings"],
+            "notes": [
+              "Control every rep."
+            ]
+          },
+          {
+            "name": "Bulgarian Split Squat",
+            "sets": 3,
+            "reps": "8-12 per leg",
+            "muscles": ["Quads", "Glutes", "Hamstrings"],
+            "refVideo": "https://www.youtube.com/shorts/Cow3ESXmrTU",
+            "notes": [
+              "Use bodyweight initially if needed.",
+              "Balance is more important than weight."
+            ]
+          },
+          {
+            "name": "Leg Extension",
+            "sets": 2,
+            "reps": "12-15",
+            "muscles": ["Quads"],
+            "notes": [
+              "Skip if doing Romanian Deadlift.",
+              "Smooth controlled reps."
+            ]
+          },
+          {
+            "name": "Calf Raises",
+            "sets": 3,
+            "reps": "12-20",
+            "muscles": ["Calves"],
+            "notes": [
+              "Use full range."
+            ]
+          },
+          {
+            "name": "Crunches or Leg Raises",
+            "sets": 3,
+            "reps": "10-20",
+            "muscles": ["Abs", "Hip flexors"],
+            "refVideo": "https://www.youtube.com/shorts/fbGDQGHxvHk",
+            "notes": [
+              "Keep tension on abs throughout."
+            ]
+          }
+        ]
+      }
+    },
+    "successMetrics": [
+      "Increase weight or reps most weeks.",
+      "Bodyweight stable or increasing slightly if prioritizing muscle gain.",
+      "Waist measurement stable or decreasing.",
+      "Running performance maintained.",
+      "Improved energy and recovery."
+    ]
+  }

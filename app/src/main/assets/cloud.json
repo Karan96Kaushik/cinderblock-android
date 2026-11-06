@@ -1,0 +1,9 @@
+{
+  "supabaseUrl": "",
+  "supabaseAnonKey": "",
+  "testFunctionUrl": "",
+  "aiChatUrl": "",
+  "aiExtractJsonUrl": "",
+  "aiScopeJudgeUrl": "",
+  "reportIssueUrl": ""
+}
