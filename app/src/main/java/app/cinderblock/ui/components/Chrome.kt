@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.cinderblock.ui.theme.LocalColors
 import app.cinderblock.ui.theme.LocalType
+import kotlinx.coroutines.delay
 
 @Composable
 fun DisplayText(
@@ -243,8 +244,6 @@ fun CardBlock(modifier: Modifier = Modifier, content: @Composable ColumnScope.()
         content = content,
     )
 }
-
-import kotlinx.coroutines.delay
 
 @Composable
 fun rememberNow(): Long {

@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import app.cinderblock.CinderViewModel
+import app.cinderblock.data.deleteMetric
+import app.cinderblock.data.saveMetric
 import app.cinderblock.domain.METRIC_FIELDS
 import app.cinderblock.domain.MetricEntry
 import app.cinderblock.domain.decreaseIsGood

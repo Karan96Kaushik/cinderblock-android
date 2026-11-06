@@ -24,6 +24,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import app.cinderblock.CinderViewModel
+import app.cinderblock.data.clearSkip
+import app.cinderblock.data.register
+import app.cinderblock.data.sendReset
+import app.cinderblock.data.signIn
+import app.cinderblock.data.skipLogin
+import app.cinderblock.data.updatePassword
 import app.cinderblock.domain.ActionResult
 import app.cinderblock.ui.components.DisplayText
 import app.cinderblock.ui.components.Mono

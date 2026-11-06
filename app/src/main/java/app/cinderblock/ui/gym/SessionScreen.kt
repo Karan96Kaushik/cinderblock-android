@@ -43,6 +43,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import app.cinderblock.CinderViewModel
+import app.cinderblock.data.ensureSets
+import app.cinderblock.data.focusSet
+import app.cinderblock.data.markExercise
+import app.cinderblock.data.pauseRest
+import app.cinderblock.data.resetRest
+import app.cinderblock.data.resumeRest
+import app.cinderblock.data.startRest
+import app.cinderblock.data.updateSet
+import app.cinderblock.data.updateSettings
 import app.cinderblock.domain.HapticKind
 import app.cinderblock.domain.REST_KEY
 import app.cinderblock.domain.exerciseStatus

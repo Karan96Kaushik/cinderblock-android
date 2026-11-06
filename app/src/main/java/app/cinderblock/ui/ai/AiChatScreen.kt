@@ -46,6 +46,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import app.cinderblock.CinderViewModel
+import app.cinderblock.data.reportChat
+import app.cinderblock.data.revertChat
+import app.cinderblock.data.saveChat
+import app.cinderblock.data.sendChat
+import app.cinderblock.data.setChatMode
+import app.cinderblock.data.setChatPreview
+import app.cinderblock.data.stopChat
 import app.cinderblock.domain.ChatTurn
 import app.cinderblock.domain.formatVersionLabel
 import app.cinderblock.domain.parseAssistant

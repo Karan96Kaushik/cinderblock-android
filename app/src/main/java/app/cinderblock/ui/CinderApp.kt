@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -25,6 +26,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import app.cinderblock.CinderViewModel
+import app.cinderblock.data.setRecovery
 import app.cinderblock.domain.UiEffect
 import app.cinderblock.ui.auth.LoginScreen
 import app.cinderblock.ui.editor.EditorScreen
@@ -60,7 +62,7 @@ fun CinderApp(vm: CinderViewModel = viewModel()) {
         Box(Modifier.fillMaxSize().background(colors.background)) {
             if (!state.ready) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    app.cinderblock.ui.components.DisplayText("CINDERBLOCK", size = androidx.compose.ui.unit.sp(22))
+                    app.cinderblock.ui.components.DisplayText("CINDERBLOCK", size = 22.sp)
                 }
             } else {
                 val nav = rememberNavController()

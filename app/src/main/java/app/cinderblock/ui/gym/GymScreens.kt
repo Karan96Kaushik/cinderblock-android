@@ -37,6 +37,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import app.cinderblock.CinderViewModel
+import app.cinderblock.data.revertVersion
+import app.cinderblock.data.selectWorkout
+import app.cinderblock.data.setVideo
+import app.cinderblock.data.toggleVersionHistory
 import app.cinderblock.domain.ActionResult
 import app.cinderblock.domain.DayStatus
 import app.cinderblock.domain.HapticKind

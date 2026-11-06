@@ -31,9 +31,9 @@ internal suspend fun Controller.updateSet(
     date: String,
     exercise: String,
     index: Int,
-    weight: String?,
-    reps: String?,
-    seconds: String?,
+    weight: String? = null,
+    reps: String? = null,
+    seconds: String? = null,
 ) {
     edit(sync = true) { state ->
         val day = state.gymLog[date] ?: return@edit state

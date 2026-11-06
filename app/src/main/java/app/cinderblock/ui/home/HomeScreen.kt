@@ -40,6 +40,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import app.cinderblock.BuildConfig
 import app.cinderblock.CinderViewModel
+import app.cinderblock.data.clearSkip
+import app.cinderblock.data.signOut
+import app.cinderblock.data.syncNow
 import app.cinderblock.domain.DayStatus
 import app.cinderblock.domain.HapticKind
 import app.cinderblock.domain.bodyTrend
