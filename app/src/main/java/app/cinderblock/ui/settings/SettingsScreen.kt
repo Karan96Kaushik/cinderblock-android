@@ -18,10 +18,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import app.cinderblock.ui.openNotificationSettings
+import app.cinderblock.ui.theme.fontScaleFor
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
@@ -30,7 +35,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -105,7 +112,12 @@ fun SettingsScreen(nav: NavHostController, vm: CinderViewModel) {
     var askedNotification by remember { mutableStateOf(false) }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         askedNotification = true
-        notice = if (granted) "Notifications enabled." else "Notifications are blocked. Allow them in your device settings, then refresh."
+        notice = if (granted) "Notifications enabled." else "Notifications are blocked. Allow them in your device settings, then come back."
+    }
+    var resumes by remember { mutableIntStateOf(0) }
+    LifecycleResumeEffect(Unit) {
+        resumes++
+        onPauseOrDispose {}
     }
     LaunchedEffect(state.auth?.userId, state.cloud.configured) {
         if (state.auth != null) vm.controller.refreshCloudLists()
@@ -143,7 +155,7 @@ fun SettingsScreen(nav: NavHostController, vm: CinderViewModel) {
                         scope.launch { vm.controller.updateSettings { it.copy(restTimerMinutes = clampRestMinutes(it.restTimerMinutes + 0.5)) } }
                     }) { Mono("+", color = colors.neonOrange, size = 20.sp) }
                 }
-                Mono("This value is a rest-timer preset, and the auto-start duration when that switch is on. The timer does not start after the final set.")
+                Mono("This value is a rest-timer preset, and the duration used when the rest timer starts on its own.")
             }
 
             SectionHeader("Appearance")
@@ -164,7 +176,7 @@ fun SettingsScreen(nav: NavHostController, vm: CinderViewModel) {
                     }
                 }
                 Mono("Font size")
-                ChoiceRow(listOf("sm", "md", "lg", "xl"), settings.fontSize) { value ->
+                FontSizePicker(settings.fontSize) { value ->
                     scope.launch { vm.controller.updateSettings { it.copy(fontSize = value) } }
                 }
                 Mono("Font style")
@@ -201,7 +213,9 @@ fun SettingsScreen(nav: NavHostController, vm: CinderViewModel) {
             }
 
             SectionHeader("Notifications")
-            val status = notificationStatus(context, askedNotification)
+            val status = remember(resumes, askedNotification, state.notificationPrompted) {
+                notificationStatus(context, askedNotification || state.notificationPrompted)
+            }
             CardBlock {
                 Mono(status, color = colors.foreground, size = 14.sp)
                 Mono("Alerts for workout reminders. Permission is granted by the device.")
@@ -213,7 +227,8 @@ fun SettingsScreen(nav: NavHostController, vm: CinderViewModel) {
                     })
                 }
                 if (status == "Blocked") {
-                    Mono("Notifications are blocked. Allow them in your device settings, then refresh.")
+                    Mono("Notifications are blocked. Allow them in your device settings, then come back.")
+                    PrimaryButton("Open notification settings", { openNotificationSettings(context) })
                 }
                 if (status == "Enabled") {
                     OutlineButton("Send test notification", {
@@ -415,6 +430,44 @@ private fun ChoiceRow(options: List<String>, selected: String, onPick: (String) 
         options.forEach { option ->
             TextButton({ onPick(option) }) {
                 Mono(option, color = if (option == selected) colors.neonOrange else colors.mutedForeground)
+            }
+        }
+    }
+}
+
+@Composable
+private fun FontSizePicker(selected: String, onPick: (String) -> Unit) {
+    val colors = LocalColors.current
+    val current = fontScaleFor(selected)
+    val options = listOf("sm" to "Small", "md" to "Default", "lg" to "Large", "xl" to "Larger")
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        options.forEach { (value, label) ->
+            val on = value == selected
+            Column(
+                Modifier
+                    .weight(1f)
+                    .heightIn(min = 72.dp)
+                    .background(if (on) colors.neonOrange else colors.background, RoundedCornerShape(8.dp))
+                    .border(1.dp, if (on) colors.neonOrange else colors.border, RoundedCornerShape(8.dp))
+                    .clickable { onPick(value) }
+                    .padding(vertical = 8.dp, horizontal = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                // The whole app is already scaled by the selected size, so undo it to preview each option at its own size.
+                Mono(
+                    "Aa",
+                    color = if (on) colors.primaryForeground else colors.foreground,
+                    size = 18.sp * (fontScaleFor(value) / current),
+                    weight = FontWeight.Bold,
+                )
+                Mono(
+                    label,
+                    color = if (on) colors.primaryForeground else colors.mutedForeground,
+                    size = 10.sp,
+                    align = TextAlign.Center,
+                    maxLines = 1,
+                )
             }
         }
     }

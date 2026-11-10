@@ -259,18 +259,8 @@ data class RestTimer(
 ) {
     fun displayRemaining(now: Long): Int {
         if (!running || endsAt == null) return remainingSeconds
-        return ((endsAt - now) / 1000L).toInt().coerceAtLeast(0)
+        return ((endsAt - now + 999L) / 1000L).toInt().coerceAtLeast(0)
     }
-
-    val phaseLabel: String
-        get() = when {
-            ownerExercise == null -> "Pick a preset"
-            announced -> "Rest complete"
-            running -> "Running"
-            remainingSeconds > 0 -> "Paused"
-            durationSeconds > 0 -> "Rest complete"
-            else -> "Pick a preset"
-        }
 }
 
 data class RunCompletion(val log: RunLog, val endedEarly: Boolean)
@@ -306,6 +296,7 @@ data class AppState(
     val program: ProgramDocument = ProgramDocument(),
     val runningPlan: RunningPlan = RunningPlan(),
     val gymLog: Map<String, DayLog> = emptyMap(),
+    val sessionExercise: Map<String, String> = emptyMap(),
     val runLog: List<RunLog> = emptyList(),
     val activeRun: ActiveRun? = null,
     val bodyMetrics: List<MetricEntry> = emptyList(),
@@ -323,6 +314,7 @@ data class AppState(
     val syncError: String? = null,
     val settingsUpdatedAt: Long = 0L,
     val planUpdatedAt: Long = 0L,
+    val notificationPrompted: Boolean = false,
     val rest: RestTimer = RestTimer(),
     val runCompletion: RunCompletion? = null,
     val runRestoredUntil: Long = 0L,

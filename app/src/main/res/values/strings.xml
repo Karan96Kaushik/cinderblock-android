@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">CINDERBLOCK</string>
+    <string name="widget_today_label">Today</string>
+    <string name="widget_today_description">Today\'s workout, this week\'s progress, live timers and quick shortcuts</string>
+    <string name="widget_rest_label">Rest timer</string>
+    <string name="widget_rest_description">Rest countdown with pause, +15s and skip</string>
 </resources>

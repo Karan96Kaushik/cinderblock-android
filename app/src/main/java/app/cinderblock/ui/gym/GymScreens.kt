@@ -8,11 +8,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -82,6 +87,7 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CalendarScreen(dateArg: String?, nav: NavHostController, vm: CinderViewModel) {
     val state by vm.controller.state.collectAsState()
@@ -128,50 +134,32 @@ fun CalendarScreen(dateArg: String?, nav: NavHostController, vm: CinderViewModel
                                 val iso = day?.toString()
                                 val dayLog = iso?.let { state.gymLog[it] }
                                 val status = dayStatus(dayLog)
-                                val selectedDay = day == selected
-                                val isToday = day == today
-                                Column(
-                                    Modifier.weight(1f).clickable(enabled = day != null) {
-                                        if (day != null) nav.navigate(Routes.gym(day.toString()))
-                                    }.padding(vertical = 4.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                ) {
-                                    Mono(
-                                        day?.dayOfMonth?.toString() ?: "",
-                                        color = when {
-                                            selectedDay -> colors.primaryForeground
-                                            isToday -> colors.neonYellow
-                                            else -> colors.foreground
-                                        },
-                                        modifier = if (selectedDay) Modifier.background(colors.neonOrange, CircleShape).padding(6.dp) else Modifier.padding(6.dp),
-                                    )
-                                    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                                        if (status != DayStatus.Empty && dayLog != null) {
-                                            val dot = when {
-                                                dayLog.workoutKey == REST_KEY -> colors.mutedForeground
-                                                colorGroup(state.program, dayLog.workoutKey) == "upper" -> colors.neonOrange
-                                                else -> colors.neonAmber
-                                            }
-                                            Box(
-                                                Modifier.size(7.dp).clip(CircleShape).background(dot).then(
-                                                    if (isDayDone(dayLog)) Modifier.border(1.dp, colors.foreground, CircleShape) else Modifier,
-                                                ),
-                                            )
-                                        }
-                                        if (iso != null && state.runLog.any { it.date == iso }) {
-                                            Box(Modifier.size(7.dp).clip(CircleShape).background(colors.neonYellow))
-                                        }
-                                    }
+                                val rest = dayLog?.workoutKey == REST_KEY
+                                val training = when {
+                                    status == DayStatus.Empty || dayLog == null || rest -> null
+                                    colorGroup(state.program, dayLog.workoutKey) == "upper" -> colors.neonOrange
+                                    else -> colors.neonAmber
                                 }
+                                DayCell(
+                                    modifier = Modifier.weight(1f),
+                                    label = day?.dayOfMonth?.toString() ?: "",
+                                    selected = day == selected,
+                                    today = day == today,
+                                    training = training,
+                                    rest = rest,
+                                    complete = status == DayStatus.Complete,
+                                    hasRun = iso != null && state.runLog.any { it.date == iso },
+                                    onClick = { if (day != null) nav.navigate(Routes.gym(day.toString())) },
+                                )
                             }
                         }
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Legend("Upper", colors.neonOrange)
-                        Legend("Lower", colors.neonAmber)
-                        Legend("Rest", colors.mutedForeground)
-                        Legend("Run", colors.neonYellow)
-                        Legend("Done", colors.foreground)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Legend("Upper", fill = colors.neonOrange)
+                        Legend("Lower", fill = colors.neonAmber)
+                        Legend("Partial", ring = colors.foreground)
+                        Legend("Rest", ring = colors.mutedForeground)
+                        Legend("Run", bar = true)
                     }
                     CardBlock {
                         Mono(formatLongDate(selected))
@@ -326,9 +314,77 @@ private fun Stat(label: String, value: String) {
 }
 
 @Composable
-private fun Legend(label: String, color: androidx.compose.ui.graphics.Color) {
+private fun DayCell(
+    modifier: Modifier,
+    label: String,
+    selected: Boolean,
+    today: Boolean,
+    training: Color?,
+    rest: Boolean,
+    complete: Boolean,
+    hasRun: Boolean,
+    onClick: () -> Unit,
+) {
+    val colors = LocalColors.current
+    val filled = training != null && complete
+    val ring = when {
+        rest -> colors.mutedForeground
+        training != null && !complete -> training
+        training == null && hasRun -> colors.neonYellow
+        else -> null
+    }
+    val selectedEmpty = selected && !filled && ring == null
+    Column(
+        modifier.clickable(enabled = label.isNotEmpty(), onClick = onClick).padding(vertical = 3.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(Modifier.size(36.dp), contentAlignment = Alignment.Center) {
+            if (selected && !selectedEmpty) {
+                Box(Modifier.size(36.dp).border(1.5.dp, colors.foreground, CircleShape))
+            } else if (!selected && today && !filled && ring == null) {
+                Box(Modifier.size(30.dp).border(1.5.dp, colors.neonYellow, CircleShape))
+            }
+            Box(
+                Modifier.size(30.dp).then(
+                    when {
+                        filled && training != null -> Modifier.background(training, CircleShape)
+                        selectedEmpty -> Modifier.background(colors.neonOrange, CircleShape)
+                        ring != null -> Modifier.border(2.5.dp, ring, CircleShape)
+                        else -> Modifier
+                    },
+                ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Mono(
+                    label,
+                    color = when {
+                        filled || selectedEmpty -> colors.primaryForeground
+                        today -> colors.neonYellow
+                        else -> colors.foreground
+                    },
+                    size = 12.sp,
+                )
+            }
+        }
+        Box(
+            Modifier.padding(top = 3.dp).height(4.dp).width(18.dp).then(
+                if (hasRun) Modifier.clip(RoundedCornerShape(2.dp)).background(colors.neonYellow) else Modifier,
+            ),
+        )
+    }
+}
+
+@Composable
+private fun Legend(label: String, fill: Color? = null, ring: Color? = null, bar: Boolean = false) {
+    val colors = LocalColors.current
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(8.dp).clip(CircleShape).background(color))
+        Box(Modifier.size(12.dp), contentAlignment = Alignment.Center) {
+            when {
+                bar -> Box(Modifier.width(12.dp).height(4.dp).clip(RoundedCornerShape(2.dp)).background(colors.neonYellow))
+                fill != null -> Box(Modifier.size(10.dp).clip(CircleShape).background(fill))
+                ring != null -> Box(Modifier.size(10.dp).border(2.dp, ring, CircleShape))
+            }
+        }
         Mono(" $label", size = 10.sp)
     }
 }

@@ -7,6 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -37,12 +39,11 @@ data class CinderColors(
 data class CinderType(
     val display: FontFamily,
     val body: FontFamily,
-    val scale: Float,
 )
 
 val LocalColors = staticCompositionLocalOf { orangeColors() }
 val LocalType = staticCompositionLocalOf {
-    CinderType(FontFamily.SansSerif, FontFamily.Monospace, 1f)
+    CinderType(FontFamily.SansSerif, FontFamily.Monospace)
 }
 
 private val Orbitron = FontFamily(
@@ -120,25 +121,28 @@ fun oklch(l: Double, c: Double, h: Double): Color {
     return Color(gamma(r), gamma(g), gamma(bl))
 }
 
-fun typeFor(preset: String, size: String): CinderType {
-    val scale = when (size) {
-        "sm" -> 0.875f
-        "lg" -> 1.125f
-        "xl" -> 1.25f
-        else -> 1f
-    }
+fun fontScaleFor(size: String): Float = when (size) {
+    "sm" -> 0.875f
+    "lg" -> 1.15f
+    "xl" -> 1.3f
+    else -> 1f
+}
+
+fun typeFor(preset: String): CinderType {
     val (display, body) = when (preset) {
         "readable" -> FontFamily.SansSerif to FontFamily.SansSerif
         "mono" -> ShareTech to ShareTech
         else -> Orbitron to ShareTech
     }
-    return CinderType(display, body, scale)
+    return CinderType(display, body)
 }
 
 @Composable
 fun CinderTheme(theme: String, fontPreset: String, fontSize: String, content: @Composable () -> Unit) {
     val colors = colorsFor(theme)
-    val type = typeFor(fontPreset, fontSize)
+    val type = typeFor(fontPreset)
+    val system = LocalDensity.current
+    val density = Density(system.density, system.fontScale * fontScaleFor(fontSize))
     val scheme = if (colors.light) {
         lightColorScheme(
             primary = colors.primary,
@@ -162,7 +166,7 @@ fun CinderTheme(theme: String, fontPreset: String, fontSize: String, content: @C
             outline = colors.border,
         )
     }
-    CompositionLocalProvider(LocalColors provides colors, LocalType provides type) {
+    CompositionLocalProvider(LocalColors provides colors, LocalType provides type, LocalDensity provides density) {
         MaterialTheme(colorScheme = scheme, content = content)
     }
 }

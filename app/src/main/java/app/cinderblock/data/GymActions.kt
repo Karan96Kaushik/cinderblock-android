@@ -1,5 +1,6 @@
 package app.cinderblock.data
 
+import app.cinderblock.domain.AppState
 import app.cinderblock.domain.DayLog
 import app.cinderblock.domain.ExerciseLog
 import app.cinderblock.domain.REST_KEY
@@ -53,21 +54,22 @@ internal suspend fun Controller.updateSet(
         sets[index] = nextSet
         val wasComplete = isSetComplete(current, timed)
         val nowComplete = isSetComplete(nextSet, timed)
-        var rest = state.rest
-        if (!wasComplete && nowComplete && state.settings.autoStartRestTimer && index < sets.lastIndex) {
-            val started = rest.autoStarted[exercise].orEmpty()
-            if (index !in started) {
-                val duration = (state.settings.restTimerMinutes * 60).toInt().coerceAtLeast(1)
-                rest = rest.start(exercise, date, duration).copy(
-                    autoStarted = rest.autoStarted + (exercise to (started + index)),
-                )
-            }
-        }
+        val rest = if (!wasComplete && nowComplete) state.rest.autoStartForSet(state, exercise, date, index) else state.rest
         val updated = day.copy(
             exercises = day.exercises + (exercise to log.copy(sets = sets)),
             updatedAt = System.currentTimeMillis(),
         )
         state.copy(gymLog = state.gymLog + (date to updated), rest = rest)
+    }
+}
+
+internal suspend fun Controller.focusExercise(date: String, exercise: String) {
+    if (snapshot().sessionExercise[date] == exercise) return
+    val cutoff = java.time.LocalDate.now().minusDays(14).toString()
+    edit(persist = true, sync = false) { state ->
+        if (state.sessionExercise[date] == exercise) return@edit state
+        val kept = state.sessionExercise.filterKeys { it >= cutoff }
+        state.copy(sessionExercise = kept + (date to exercise))
     }
 }
 
@@ -77,14 +79,33 @@ internal suspend fun Controller.focusSet(date: String, exercise: String, index: 
         val day = state.gymLog[date] ?: return@edit state
         val log = day.exercises[exercise] ?: return@edit state
         if (log.completed || log.skipped || index !in log.sets.indices) return@edit state
-        if (hasSetData(log.sets[index])) return@edit state
+        val program = resolveProgram(state, day).first
+        val definition = program.workouts[day.workoutKey]?.exercises?.firstOrNull { it.name == exercise }
+        val timed = definition?.let(::isTimedHold) ?: false
         val sets = log.sets.toMutableList()
-        sets[index] = sets[index - 1].copy()
-        val updated = day.copy(
-            exercises = day.exercises + (exercise to log.copy(sets = sets)),
-            updatedAt = System.currentTimeMillis(),
-        )
-        state.copy(gymLog = state.gymLog + (date to updated))
+        val before = sets[index]
+        val filled = if (hasSetData(before)) before else sets[index - 1].copy()
+        sets[index] = filled
+        val completedNow = !isSetComplete(before, timed) && isSetComplete(filled, timed)
+        val rest = if (state.rest.running) {
+            state.rest
+        } else if (completedNow) {
+            state.rest.autoStartForSet(state, exercise, date, index)
+        } else if (isSetComplete(sets[index - 1], timed)) {
+            state.rest.autoStartForSet(state, exercise, date, index - 1)
+        } else {
+            state.rest
+        }
+        if (filled == before && rest == state.rest) return@edit state
+        val updated = if (filled == before) {
+            day
+        } else {
+            day.copy(
+                exercises = day.exercises + (exercise to log.copy(sets = sets)),
+                updatedAt = System.currentTimeMillis(),
+            )
+        }
+        state.copy(gymLog = state.gymLog + (date to updated), rest = rest)
     }
 }
 
@@ -178,6 +199,22 @@ internal suspend fun Controller.resumeRest() {
     }
 }
 
+internal suspend fun Controller.adjustRest(deltaSeconds: Int) {
+    val now = System.currentTimeMillis()
+    edit(persist = false) { state ->
+        val rest = state.rest
+        if (rest.ownerExercise == null || rest.announced) return@edit state
+        val remaining = (rest.displayRemaining(now) + deltaSeconds).coerceAtLeast(1)
+        state.copy(
+            rest = rest.copy(
+                remainingSeconds = remaining,
+                durationSeconds = maxOf(rest.durationSeconds + deltaSeconds, remaining),
+                endsAt = if (rest.running) now + remaining * 1000L else null,
+            ),
+        )
+    }
+}
+
 internal suspend fun Controller.resetRest() {
     edit(persist = false) { state ->
         state.copy(
@@ -195,6 +232,43 @@ internal suspend fun Controller.completeRest() {
         )
     }
     playSound("timer")
+    haptic(app.cinderblock.domain.HapticKind.Success)
+}
+
+internal suspend fun Controller.handleTimerAction(action: String?) {
+    when (action) {
+        ACTION_RUN_PAUSE -> pauseRun()
+        ACTION_RUN_RESUME -> resumeRun()
+        ACTION_RUN_SKIP -> skipPhase()
+        ACTION_REST_START, ACTION_EXERCISE_DONE -> {
+            val session = sessionNotice(snapshot(), System.currentTimeMillis()) ?: return
+            val current = session.current ?: return
+            if (action == ACTION_REST_START) {
+                startRest(session.date, current, session.defaultRestSeconds)
+            } else {
+                haptic(app.cinderblock.domain.HapticKind.Success)
+                markExercise(session.date, current, done = true, skipped = false)
+            }
+        }
+        ACTION_REST_PAUSE -> pauseRest()
+        ACTION_REST_RESUME -> resumeRest()
+        ACTION_REST_ADD -> adjustRest(15)
+        ACTION_REST_SKIP -> resetRest()
+        ACTION_REST_AGAIN -> {
+            val rest = snapshot().rest
+            val owner = rest.ownerExercise ?: return
+            val date = rest.ownerDate ?: return
+            startRest(date, owner, rest.durationSeconds.coerceAtLeast(1))
+        }
+    }
+}
+
+private fun RestTimer.autoStartForSet(state: AppState, exercise: String, date: String, index: Int): RestTimer {
+    if (!state.settings.autoStartRestTimer || index < 0) return this
+    val started = autoStarted[exercise].orEmpty()
+    if (index in started) return this
+    val duration = (state.settings.restTimerMinutes * 60).toInt().coerceAtLeast(1)
+    return start(exercise, date, duration).copy(autoStarted = autoStarted + (exercise to (started + index)))
 }
 
 private fun RestTimer.start(exercise: String, date: String, seconds: Int): RestTimer {

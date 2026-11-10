@@ -28,21 +28,21 @@ fun isDayDone(log: DayLog?): Boolean {
     return status == DayStatus.Complete || status == DayStatus.Rest
 }
 
-fun formatSetSummary(log: ExerciseLog): String? {
-    val parts = log.sets.mapNotNull { set ->
-        val seconds = set.seconds.trim()
-        if (seconds.isNotEmpty()) return@mapNotNull "${seconds}s"
-        val weight = set.weight.trim()
-        val reps = set.reps.trim()
-        when {
-            weight.isNotEmpty() && reps.isNotEmpty() -> "${weight}kg × $reps"
-            weight.isNotEmpty() -> "${weight}kg"
-            reps.isNotEmpty() -> "$reps reps"
-            else -> null
-        }
+fun formatOneSet(set: SetLog): String? {
+    val seconds = set.seconds.trim()
+    if (seconds.isNotEmpty()) return "${seconds}s"
+    val weight = set.weight.trim()
+    val reps = set.reps.trim()
+    return when {
+        weight.isNotEmpty() && reps.isNotEmpty() -> "${weight}kg × $reps"
+        weight.isNotEmpty() -> "${weight}kg"
+        reps.isNotEmpty() -> "$reps reps"
+        else -> null
     }
-    return parts.takeIf { it.isNotEmpty() }?.joinToString(" · ")
 }
+
+fun formatSetSummary(log: ExerciseLog): String? =
+    log.sets.mapNotNull(::formatOneSet).takeIf { it.isNotEmpty() }?.joinToString(" · ")
 
 fun daySummary(program: ProgramDocument, log: DayLog): String {
     val status = dayStatus(log)

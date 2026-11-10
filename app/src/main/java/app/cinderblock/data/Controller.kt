@@ -25,6 +25,13 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import app.cinderblock.widget.Widgets
+import app.cinderblock.widget.widgetSnapshot
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -43,6 +50,8 @@ class Controller(private val context: Context) {
     internal val cloud = CloudClient()
     private val sounds = SoundPlayer()
     private val haptics = Haptics(context)
+    private val timerNotifications = TimerNotifications(context)
+    @Volatile private var inForeground = false
     private val file = File(context.filesDir, "cinderblock-state.json")
     private var syncJob: kotlinx.coroutines.Job? = null
     private var cloudOverride = CloudConfig()
@@ -53,13 +62,42 @@ class Controller(private val context: Context) {
     fun start(override: CloudConfig) {
         cloudOverride = override
         createNotificationChannel()
+        timerNotifications.createChannels()
         scope.launch { load() }
+        scope.launch {
+            state.map { restNotice(it) }.distinctUntilChanged().collect { timerNotifications.renderRestAlert(it, inForeground) }
+        }
+        scope.launch {
+            val clock = flow {
+                while (true) {
+                    emit(Unit)
+                    delay(30_000)
+                }
+            }
+            combine(state, clock) { current, _ -> sessionNotice(current, System.currentTimeMillis()) }
+                .distinctUntilChanged()
+                .collect { timerNotifications.renderSession(it) }
+        }
+        scope.launch {
+            state.map { runNotice(it) }.distinctUntilChanged().collect { timerNotifications.renderRun(it, inForeground) }
+        }
+        scope.launch {
+            state.filter { it.ready }.map { widgetSnapshot(it) }.distinctUntilChanged().collect { Widgets.update(context, it) }
+        }
         scope.launch {
             while (isActive) {
                 delay(250)
                 tick(System.currentTimeMillis())
             }
         }
+    }
+
+    suspend fun markNotificationPrompted() {
+        edit { it.copy(notificationPrompted = true) }
+    }
+
+    fun setInForeground(value: Boolean) {
+        inForeground = value
     }
 
     fun haptic(kind: HapticKind) = haptics.play(kind)
@@ -128,6 +166,7 @@ class Controller(private val context: Context) {
     private fun tick(now: Long) {
         val state = _state.value
         if (!state.ready) return
+        timerNotifications.tick(now)
         val run = state.activeRun
         if (run != null && run.running && run.phaseEndsAt != null && now >= run.phaseEndsAt) {
             scope.launch { catchUpRun(now) }

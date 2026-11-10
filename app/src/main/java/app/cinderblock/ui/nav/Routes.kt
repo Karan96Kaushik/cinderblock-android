@@ -9,7 +9,7 @@ object Routes {
     const val Login = "login"
     const val Gym = "gym?date={date}"
     const val Select = "gym/{date}/select"
-    const val Workout = "gym/{date}/workout"
+    const val Workout = "gym/{date}/workout?exercise={exercise}"
     const val Explore = "gym/explore"
     const val ExploreOne = "gym/explore/{key}"
     const val Running = "running"
@@ -21,7 +21,13 @@ object Routes {
 
     fun gym(date: String?) = if (date.isNullOrBlank()) "gym" else "gym?date=$date"
     fun select(date: String) = "gym/$date/select"
-    fun workout(date: String) = "gym/$date/workout"
+    fun workout(date: String, exercise: String? = null): String {
+        val base = "gym/$date/workout"
+        if (exercise.isNullOrBlank()) return base
+        return "$base?exercise=${Uri.encode(exercise)}"
+    }
+
+    fun workoutDeepLink(date: String, exercise: String? = null) = "/${workout(date, exercise)}"
     fun explore(key: String? = null) = if (key.isNullOrBlank()) Explore else "gym/explore/${Uri.encode(key)}"
     fun ai(mode: String) = "ai/$mode"
 }
@@ -59,7 +65,7 @@ fun routeFromUri(uri: Uri): String {
             else when (parts.getOrNull(1)) {
                 null -> Routes.gym(date)
                 "select" -> Routes.select(date!!)
-                "workout" -> Routes.workout(date!!)
+                "workout" -> Routes.workout(date!!, uri.getQueryParameter("exercise"))
                 else -> Routes.Home
             }
         }

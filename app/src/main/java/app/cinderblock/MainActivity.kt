@@ -14,6 +14,16 @@ class MainActivity : ComponentActivity() {
         setContent { CinderApp() }
     }
 
+    override fun onStart() {
+        super.onStart()
+        (application as CinderblockApp).controller.setInForeground(true)
+    }
+
+    override fun onStop() {
+        (application as CinderblockApp).controller.setInForeground(false)
+        super.onStop()
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)

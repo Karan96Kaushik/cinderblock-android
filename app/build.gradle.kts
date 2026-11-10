@@ -21,7 +21,7 @@ fun secret(name: String): String =
 
 android {
     namespace = "app.cinderblock"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "app.cinderblock"

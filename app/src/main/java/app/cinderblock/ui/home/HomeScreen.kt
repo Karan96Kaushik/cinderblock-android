@@ -1,12 +1,10 @@
 package app.cinderblock.ui.home
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,8 +21,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -38,11 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import app.cinderblock.BuildConfig
 import app.cinderblock.CinderViewModel
-import app.cinderblock.data.clearSkip
-import app.cinderblock.data.signOut
-import app.cinderblock.data.syncNow
 import app.cinderblock.domain.DayStatus
 import app.cinderblock.domain.HapticKind
 import app.cinderblock.domain.bodyTrend
@@ -82,6 +74,9 @@ import app.cinderblock.ui.components.PulseDot
 import app.cinderblock.ui.components.ScreenColumn
 import app.cinderblock.ui.components.SectionHeader
 import app.cinderblock.ui.components.rememberNow
+import app.cinderblock.ui.nav.MenuButton
+import app.cinderblock.ui.nav.PageLink
+import app.cinderblock.ui.nav.RegisterPageLinks
 import app.cinderblock.ui.nav.Routes
 import app.cinderblock.ui.theme.LocalColors
 import kotlinx.coroutines.launch
@@ -97,7 +92,6 @@ fun HomeScreen(nav: NavHostController, vm: CinderViewModel) {
     val programReq = remember { BringIntoViewRequester() }
     val scheduleReq = remember { BringIntoViewRequester() }
     val progressionReq = remember { BringIntoViewRequester() }
-    val menuOpen = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     val now = rememberNow()
     val today = LocalDate.now()
     val program = state.program
@@ -114,17 +108,22 @@ fun HomeScreen(nav: NavHostController, vm: CinderViewModel) {
     val completed = countStat(completedDates, today)
     val runStat = countStat(state.runLog.map { it.date }, today)
     val showStats = sessions.total > 0 || completed.total > 0 || runStat.total > 0 || weight != null || waist != null
-    val wide = false
+    val pageLinks = remember {
+        listOf(
+            PageLink("Goals") { scope.launch { programReq.bringIntoView() } },
+            PageLink("Schedule") { scope.launch { scheduleReq.bringIntoView() } },
+            PageLink("Progression") { scope.launch { progressionReq.bringIntoView() } },
+        )
+    }
+    RegisterPageLinks(pageLinks)
 
-    BackHandler(menuOpen.value) { menuOpen.value = false }
     Box(Modifier.fillMaxSize().background(colors.background).statusBarsPadding()) {
-        Column(Modifier.fillMaxSize().verticalScroll(scroll, enabled = !menuOpen.value).navigationBarsPadding()) {
+        Column(Modifier.fillMaxSize().verticalScroll(scroll).navigationBarsPadding()) {
             ScreenColumn(768.dp) {
-                Header(wide, menuOpen.value, { menuOpen.value = !menuOpen.value }, {
+                Header {
                     vm.controller.haptic(HapticKind.Selection)
-                    menuOpen.value = false
                     nav.navigate(Routes.ai("discuss"))
-                })
+                }
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
                     SectionHeader("Today")
                     Mono(formatLongDate(today), size = 12.sp)
@@ -151,7 +150,7 @@ fun HomeScreen(nav: NavHostController, vm: CinderViewModel) {
                     if (unfinished != null) {
                         PrimaryButton("Continue ${logLabel(program, unfinished.second)}", {
                             vm.controller.haptic(HapticKind.Success)
-                            nav.navigate(Routes.workout(unfinished.first))
+                            nav.navigate(Routes.workout(unfinished.first, state.sessionExercise[unfinished.first]))
                         })
                     } else {
                         PrimaryButton("Start training", {
@@ -308,63 +307,21 @@ fun HomeScreen(nav: NavHostController, vm: CinderViewModel) {
                 }
             }
         }
-        if (menuOpen.value) {
-            Box(Modifier.fillMaxSize().background(colors.background.copy(alpha = 0.7f)).clickable { menuOpen.value = false })
-            Column(
-                Modifier
-                    .statusBarsPadding()
-                    .padding(top = 64.dp)
-                    .fillMaxWidth()
-                    .background(colors.card)
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState()),
-            ) {
-                Mono("NAVIGATION MATRIX", color = colors.neonOrange)
-                Mono("On this page", color = colors.mutedForeground)
-                MenuLink("Program", "Goals & structure") { menuOpen.value = false; scope.launch { programReq.bringIntoView() } }
-                MenuLink("Schedule", "Weekly split") { menuOpen.value = false; scope.launch { scheduleReq.bringIntoView() } }
-                MenuLink("Progression", "Load & rep rules") { menuOpen.value = false; scope.launch { progressionReq.bringIntoView() } }
-                Mono("App", color = colors.mutedForeground, modifier = Modifier.padding(top = 12.dp))
-                MenuLink("Training", "Log workouts & sets") { menuOpen.value = false; nav.navigate(Routes.gym(null)) }
-                MenuLink("Running", "Warmup · run · cooldown") { menuOpen.value = false; nav.navigate(Routes.Running) }
-                MenuLink("Metrics", "Weight & measurements") { menuOpen.value = false; nav.navigate(Routes.Metrics) }
-                MenuLink("Discuss with AI", "Ask about or edit your program") { menuOpen.value = false; nav.navigate(Routes.ai("discuss")) }
-                MenuLink("Settings", "Fonts, history, alerts") { menuOpen.value = false; nav.navigate(Routes.Settings) }
-                Spacer(Modifier.height(12.dp))
-                AuthFooter(nav, vm) { menuOpen.value = false }
-                Mono("FOUNDATION STRENGTH · v${BuildConfig.VERSION_NAME}")
-            }
-        }
     }
 }
 
 @Composable
-private fun Header(wide: Boolean, open: Boolean, onMenu: () -> Unit, onAi: () -> Unit) {
+private fun Header(onAi: () -> Unit) {
     val colors = LocalColors.current
-    BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val showOnline = maxWidth >= 600.dp
-        Row(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Row(Modifier.weight(1f).clickable { }, verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.padding(end = 8.dp).background(colors.neonOrange, RoundedCornerShape(6.dp)).padding(8.dp)) {
-                    Mono("C", color = colors.primaryForeground, weight = androidx.compose.ui.text.font.FontWeight.Bold)
-                }
-                DisplayText("CINDERBLOCK", size = 16.sp, maxLines = 1)
+    Row(Modifier.padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.padding(end = 8.dp).background(colors.neonOrange, RoundedCornerShape(6.dp)).padding(horizontal = 8.dp, vertical = 4.dp)) {
+                Mono("C", color = colors.primaryForeground, weight = androidx.compose.ui.text.font.FontWeight.Bold)
             }
-            if (showOnline) {
-                Pill("Online", colors.neonYellow)
-            }
-            IconButton(onAi) { Icon(Icons.Default.AutoAwesome, "Discuss with AI", tint = colors.mutedForeground) }
-            IconButton(onMenu) { Icon(if (open) Icons.Default.Close else Icons.Default.Menu, if (open) "Close menu" else "Open menu", tint = colors.foreground) }
+            DisplayText("CINDERBLOCK", size = 16.sp, maxLines = 1)
         }
-    }
-}
-
-@Composable
-private fun MenuLink(title: String, subtitle: String, onClick: () -> Unit) {
-    val colors = LocalColors.current
-    Column(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 8.dp)) {
-        DisplayText(title, size = 16.sp)
-        Mono(subtitle)
+        IconButton(onAi) { Icon(Icons.Default.AutoAwesome, "Discuss with AI", tint = colors.mutedForeground) }
+        MenuButton()
     }
 }
 
@@ -374,36 +331,5 @@ private fun StatCard(label: String, value: String, trend: String) {
         DisplayText(value, size = 22.sp, align = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.fillMaxWidth())
         Mono(label, align = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.fillMaxWidth())
         Mono(trend, align = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.fillMaxWidth())
-    }
-}
-
-@Composable
-private fun AuthFooter(nav: NavHostController, vm: CinderViewModel, close: () -> Unit) {
-    val state by vm.controller.state.collectAsState()
-    val scope = rememberCoroutineScope()
-    val colors = LocalColors.current
-    BoxWithConstraints {
-        val wide = maxWidth >= 600.dp
-        when {
-            !state.cloud.configured -> if (wide) Pill("Local only", colors.mutedForeground)
-            state.auth != null -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (wide) {
-                    val label = when (state.syncPhase) {
-                        app.cinderblock.domain.SyncPhase.Syncing -> "Syncing"
-                        app.cinderblock.domain.SyncPhase.Error -> "Sync err"
-                        else -> "Synced"
-                    }
-                    OutlineButton(label, {
-                        if (state.syncPhase != app.cinderblock.domain.SyncPhase.Syncing) scope.launch { vm.controller.syncNow() }
-                    })
-                }
-                OutlineButton("Out", { scope.launch { vm.controller.signOut() } })
-            }
-            else -> OutlineButton("In", {
-                scope.launch { vm.controller.clearSkip() }
-                close()
-                nav.navigate(Routes.Login)
-            })
-        }
     }
 }

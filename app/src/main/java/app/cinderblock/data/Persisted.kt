@@ -30,6 +30,7 @@ internal data class PersistedBlob(
     val program: ProgramDocument? = null,
     val runningPlan: RunningPlan = RunningPlan(),
     val gymLog: Map<String, DayLog> = emptyMap(),
+    val sessionExercise: Map<String, String> = emptyMap(),
     val runLog: List<RunLog> = emptyList(),
     val activeRun: ActiveRun? = null,
     val bodyMetrics: List<MetricEntry> = emptyList(),
@@ -41,6 +42,7 @@ internal data class PersistedBlob(
     val chat: ChatPersisted = ChatPersisted(),
     val settingsUpdatedAt: Long = 0L,
     val planUpdatedAt: Long = 0L,
+    val notificationPrompted: Boolean = false,
 )
 
 internal fun AppState.toBlob(): PersistedBlob = PersistedBlob(
@@ -49,6 +51,7 @@ internal fun AppState.toBlob(): PersistedBlob = PersistedBlob(
     program = program,
     runningPlan = runningPlan,
     gymLog = gymLog,
+    sessionExercise = sessionExercise,
     runLog = runLog,
     activeRun = activeRun,
     bodyMetrics = bodyMetrics,
@@ -60,6 +63,7 @@ internal fun AppState.toBlob(): PersistedBlob = PersistedBlob(
     chat = chat,
     settingsUpdatedAt = settingsUpdatedAt,
     planUpdatedAt = planUpdatedAt,
+    notificationPrompted = notificationPrompted,
 )
 
 internal fun PersistedBlob.into(cloud: CloudConfig, foundation: ProgramDocument): AppState = AppState(
@@ -68,6 +72,7 @@ internal fun PersistedBlob.into(cloud: CloudConfig, foundation: ProgramDocument)
     program = program ?: foundation,
     runningPlan = runningPlan,
     gymLog = gymLog,
+    sessionExercise = sessionExercise,
     runLog = runLog,
     activeRun = activeRun,
     bodyMetrics = bodyMetrics,
@@ -80,4 +85,5 @@ internal fun PersistedBlob.into(cloud: CloudConfig, foundation: ProgramDocument)
     chat = chat,
     settingsUpdatedAt = settingsUpdatedAt,
     planUpdatedAt = planUpdatedAt,
+    notificationPrompted = notificationPrompted,
 )

@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.cinderblock.ui.nav.MenuButton
 import app.cinderblock.ui.theme.LocalColors
 import app.cinderblock.ui.theme.LocalType
 import kotlinx.coroutines.delay
@@ -62,7 +63,7 @@ fun DisplayText(
         color = color,
         fontFamily = type.display,
         fontWeight = weight,
-        fontSize = size * type.scale,
+        fontSize = size,
         textAlign = align,
         maxLines = maxLines,
         letterSpacing = 0.6.sp,
@@ -87,7 +88,7 @@ fun Mono(
         color = color,
         fontFamily = type.body,
         fontWeight = weight,
-        fontSize = size * type.scale,
+        fontSize = size,
         textAlign = align,
         textDecoration = decoration,
         maxLines = maxLines,
@@ -183,7 +184,7 @@ fun FeatureBar(
         Modifier
             .fillMaxWidth()
             .background(colors.background)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .padding(start = 12.dp, end = 4.dp, top = 2.dp, bottom = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
@@ -198,12 +199,15 @@ fun FeatureBar(
             }
         }
         DisplayText(title, size = 13.sp, modifier = Modifier.weight(1f), align = TextAlign.Center, maxLines = 1)
-        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
-            when {
-                end != null -> end()
-                trailing != null -> Mono(trailing, color = colors.neonYellow, size = 11.sp)
-                date != null -> Mono(date, size = 11.sp, maxLines = 1)
+        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.weight(1f, fill = false)) {
+                when {
+                    end != null -> end()
+                    trailing != null -> Mono(trailing, color = colors.neonYellow, size = 11.sp)
+                    date != null -> Mono(date, size = 11.sp, maxLines = 1)
+                }
             }
+            MenuButton()
         }
     }
 }
