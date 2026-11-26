@@ -112,7 +112,7 @@ fun AiChatScreen(mode: String, nav: NavHostController, vm: CinderViewModel) {
             }
             if (!state.cloud.aiConfigured) {
                 Mono(
-                    "Deploy the Amplify sandbox and set CEREBRAS_API_KEY.",
+                    "AI chat is not configured yet. Deploy the Amplify sandbox so the function URLs are set.",
                     color = colors.neonYellow,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 )
@@ -124,7 +124,7 @@ fun AiChatScreen(mode: String, nav: NavHostController, vm: CinderViewModel) {
                 if (chat.turns.isEmpty() && runtime.partial.isBlank()) {
                     Mono("Ask about the current plan or describe a change. The assistant confirms before rewriting. Approve with Confirm, then View Plan and Save.")
                 }
-                chat.turns.forEach { turn -> Bubble(turn) }
+                chat.turns.forEach { turn -> Bubble(turn, system = turn.role == "system") }
                 runtime.notices.forEach { Bubble(it, system = true) }
                 if (runtime.streaming) {
                     val partial = parseAssistant(runtime.partial, streaming = true).displayText
@@ -150,7 +150,9 @@ fun AiChatScreen(mode: String, nav: NavHostController, vm: CinderViewModel) {
                 Chip("View Plan", dot = chat.hasPlanDraft && !runtime.draftOpened) {
                     scope.launch { vm.controller.setChatPreview(true) }
                 }
-                if (chat.previousDraft != null) Chip("Revert") { scope.launch { vm.controller.revertChat() } }
+                if (runtime.checkpoint != null && !runtime.streaming && !runtime.judging && !runtime.saving) {
+                    Chip("Revert") { scope.launch { vm.controller.revertChat() } }
+                }
                 if (canSave) Chip("Save") { scope.launch { vm.controller.saveChat() } }
             }
             Row(
@@ -181,7 +183,7 @@ fun AiChatScreen(mode: String, nav: NavHostController, vm: CinderViewModel) {
             }
         }
         if (runtime.preview) {
-            val revised = chat.plaintextDraft.isNotBlank()
+            val revised = chat.hasPlanDraft && chat.plaintextDraft.isNotBlank() && chat.plaintextDraft != chat.baselineDraft
             Box(Modifier.fillMaxSize()) {
                 Box(Modifier.fillMaxSize().background(colors.background.copy(alpha = 0.72f)).clickable {
                     scope.launch { vm.controller.setChatPreview(false) }

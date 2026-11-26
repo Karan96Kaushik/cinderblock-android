@@ -203,6 +203,8 @@ data class ChatPersisted(
     val turns: List<ChatTurn> = emptyList(),
     val plaintextDraft: String = "",
     val previousDraft: String? = null,
+    val baselineDraft: String = "",
+    val recentTurns: List<ChatTurn> = emptyList(),
     val planReady: Boolean = false,
     val hasPlanDraft: Boolean = false,
 )
@@ -273,6 +275,9 @@ data class ChatRuntime(
     val error: String? = null,
     val needsReauth: Boolean = false,
     val hardFailure: String? = null,
+    val reportAttempts: String = "[]",
+    val reportErrors: String = "[]",
+    val checkpoint: ChatPersisted? = null,
     val reportId: String? = null,
     val composer: String = "",
     val preview: Boolean = false,

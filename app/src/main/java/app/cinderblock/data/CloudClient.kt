@@ -243,7 +243,7 @@ internal class CloudClient {
         val body = JSONObject()
             .put("mode", mode)
             .put("runningSummary", summary)
-            .put("currentPlanContext", planContext)
+            .put("currentPlanContext", planContext.ifBlank { JSONObject.NULL })
             .put("recentTurns", JSONArray().apply {
                 turns.takeLast(7).forEach { turn ->
                     put(JSONObject().put("role", turn.role).put("content", turn.content))
@@ -259,22 +259,22 @@ internal class CloudClient {
         ) { chunk -> onChunk(stripFlushPad(chunk)) }
     }
 
-    fun extractPlan(config: CloudConfig, session: AuthSession, draft: String, summary: String): ProgramDocument {
+    fun extractPlan(config: CloudConfig, session: AuthSession, draft: String, summary: String): ExtractResult {
         val body = JSONObject()
             .put("plaintextDraft", draft)
             .put("runningSummary", summary)
             .put("schemaVersion", "1.0")
-        val text = httpRequest(
-            config.aiExtractJsonUrl,
-            "POST",
-            body.toString(),
-            mapOf("Authorization" to "Bearer ${session.accessToken}", "Content-Type" to "application/json"),
-        )
-        val json = JSONObject(text)
-        if (!json.optBoolean("ok")) {
-            error(json.optString("error").ifBlank { "The plan could not be read" })
+        val text = try {
+            httpRequest(
+                config.aiExtractJsonUrl,
+                "POST",
+                body.toString(),
+                mapOf("Authorization" to "Bearer ${session.accessToken}", "Content-Type" to "application/json"),
+            )
+        } catch (error: HttpException) {
+            return extractRejected(error.message ?: "Plan extraction failed")
         }
-        return AppJson.decodeFromString(json.getJSONObject("plan").toString())
+        return decodeExtract(text)
     }
 
     fun judge(
@@ -286,7 +286,7 @@ internal class CloudClient {
         turns: List<ChatTurn>,
         previous: String,
         proposed: String,
-    ): String? {
+    ): JudgeResult {
         val body = JSONObject()
             .put("mode", mode)
             .put("stage", stage)
@@ -303,11 +303,21 @@ internal class CloudClient {
             mapOf("Authorization" to "Bearer ${session.accessToken}", "Content-Type" to "application/json"),
         )
         val json = JSONObject(text)
-        return if (json.optString("verdict") == "reject") {
-            json.optString("reason").ifBlank { "Those changes go beyond the request" }
-        } else {
-            null
+        if (!json.optBoolean("ok", false)) {
+            error(json.optString("error").ifBlank { "Scope check failed" })
         }
+        val extras = buildList {
+            val array = json.optJSONArray("extraChanges") ?: return@buildList
+            for (index in 0 until array.length()) {
+                val item = array.optString(index)
+                if (item.isNotBlank()) add(item)
+            }
+        }
+        val rejected = json.optString("verdict") == "reject"
+        val reason = json.optString("reason").ifBlank {
+            if (rejected) "The proposed plan includes changes beyond what you asked for." else "Changes match the request."
+        }
+        return JudgeResult(accepted = !rejected, reason = reason, extraChanges = extras)
     }
 
     fun reportIssue(
@@ -316,7 +326,8 @@ internal class CloudClient {
         turns: List<ChatTurn>,
         draft: String,
         summary: String,
-        failure: String,
+        attemptsJson: String,
+        errorsJson: String,
     ): String {
         val body = JSONObject()
             .put("chatHistoryFull", JSONArray().apply {
@@ -324,8 +335,8 @@ internal class CloudClient {
             })
             .put("plaintextDraft", draft)
             .put("runningSummary", summary)
-            .put("jsonAttempts", JSONArray())
-            .put("validatorErrors", JSONArray().put(failure))
+            .put("jsonAttempts", runCatching { JSONArray(attemptsJson) }.getOrDefault(JSONArray()))
+            .put("validatorErrors", runCatching { JSONArray(errorsJson) }.getOrDefault(JSONArray()))
             .put("schemaVersion", "1.0")
         val text = httpRequest(
             config.reportIssueUrl,
@@ -415,6 +426,40 @@ internal fun errorText(body: String, fallback: String): String = try {
     }
 } catch (_: Exception) {
     fallback
+}
+
+internal sealed class ExtractResult {
+    data class Ready(val plan: ProgramDocument, val attemptsJson: String) : ExtractResult()
+    data class Rejected(val message: String, val attemptsJson: String, val errorsJson: String) : ExtractResult()
+}
+
+internal data class JudgeResult(val accepted: Boolean, val reason: String, val extraChanges: List<String>)
+
+private fun decodeExtract(text: String): ExtractResult {
+    val json = runCatching { JSONObject(text) }.getOrNull()
+        ?: return ExtractResult.Rejected("The plan could not be read", "[]", "[]")
+    return if (json.optBoolean("ok") && json.has("plan")) {
+        ExtractResult.Ready(
+            plan = AppJson.decodeFromString(json.getJSONObject("plan").toString()),
+            attemptsJson = json.opt("attempts")?.toString() ?: "[]",
+        )
+    } else {
+        extractRejected(text)
+    }
+}
+
+private fun extractRejected(body: String): ExtractResult.Rejected {
+    val json = runCatching { JSONObject(body) }.getOrNull()
+    val attempts = json?.opt("attempts")?.toString() ?: "[]"
+    val errors = json?.optJSONArray("validatorErrors")?.toString() ?: "[]"
+    val message = json?.optString("error").orEmpty().ifBlank {
+        if (json?.optString("reason") == "validation_failed") {
+            "Could not convert the plan to a valid program. You can report this for review."
+        } else {
+            "Plan extraction failed."
+        }
+    }
+    return ExtractResult.Rejected(message, attempts, errors)
 }
 
 internal fun jwtSubject(token: String): String? = try {
