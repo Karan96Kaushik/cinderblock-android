@@ -14,19 +14,26 @@ val localProps = Properties().apply {
     }
 }
 
+val keystorePropsFile = rootProject.file("keystore.properties")
+val keystoreProps = Properties().apply {
+    if (keystorePropsFile.exists()) {
+        keystorePropsFile.inputStream().use { load(it) }
+    }
+}
+
 fun secret(name: String): String =
     (localProps.getProperty(name) ?: "")
         .replace("\\", "\\\\")
         .replace("\"", "\\\"")
 
 android {
-    namespace = "app.cinderblock"
+    namespace = "com.bayonetbarontech.cinderblock"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "app.cinderblock"
+        applicationId = "com.bayonetbarontech.cinderblock"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 20026
         versionName = "2.0.26"
 
@@ -40,9 +47,24 @@ android {
         buildConfigField("String", "REPORT_ISSUE_URL", "\"${secret("REPORT_ISSUE_URL")}\"")
     }
 
+    signingConfigs {
+        create("release") {
+            if (keystorePropsFile.exists()) {
+                storeFile = rootProject.file(keystoreProps.getProperty("storeFile"))
+                storePassword = keystoreProps.getProperty("storePassword")
+                keyAlias = keystoreProps.getProperty("keyAlias")
+                keyPassword = keystoreProps.getProperty("keyPassword")
+                storeType = "PKCS12"
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            if (keystorePropsFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 

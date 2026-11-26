@@ -1,0 +1,31 @@
+package com.bayonetbarontech.cinderblock
+
+import android.content.Intent
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import com.bayonetbarontech.cinderblock.ui.CinderApp
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent { CinderApp() }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        (application as CinderblockApp).controller.setInForeground(true)
+    }
+
+    override fun onStop() {
+        (application as CinderblockApp).controller.setInForeground(false)
+        super.onStop()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+    }
+}
