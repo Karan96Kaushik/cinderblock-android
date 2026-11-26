@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -75,7 +76,7 @@ import com.bayonetbarontech.cinderblock.domain.scheduleHint
 import com.bayonetbarontech.cinderblock.ui.components.CardBlock
 import com.bayonetbarontech.cinderblock.ui.components.CoverImage
 import com.bayonetbarontech.cinderblock.ui.components.WorkoutCover
-import com.bayonetbarontech.cinderblock.ui.components.workoutArtwork
+import com.bayonetbarontech.cinderblock.ui.components.workoutDrawable
 import com.bayonetbarontech.cinderblock.ui.components.DisplayText
 import com.bayonetbarontech.cinderblock.ui.components.FeatureBar
 import com.bayonetbarontech.cinderblock.ui.components.Mono
@@ -495,7 +496,7 @@ fun ExploreScreen(key: String?, nav: NavHostController, vm: CinderViewModel) {
                 OutlineButton("Edit", { nav.navigate(Routes.Editor) })
                 state.program.workouts.forEach { (workoutKey, workout) ->
                     CardBlock(Modifier.clickable { nav.navigate(Routes.explore(workoutKey)) }) {
-                        WorkoutCover(colorGroup(state.program, workoutKey), workout.name)
+                        WorkoutCover(workout.name, workout.name)
                         DisplayText(workout.name, size = 16.sp)
                         Mono(scheduleHint(state.program, workoutKey))
                         Mono("${workout.exercises.size} exercises")
@@ -508,8 +509,8 @@ fun ExploreScreen(key: String?, nav: NavHostController, vm: CinderViewModel) {
                 val workout = state.program.workouts.getValue(key)
                 TextButton({ nav.navigate(Routes.Explore) }) { Mono("‹ All workouts", color = colors.neonOrange) }
                 CoverImage(
-                    workoutArtwork(colorGroup(state.program, key)),
-                    Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(22.dp)),
+                    workoutDrawable(workout.name),
+                    Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(22.dp)),
                     workout.name,
                 )
                 Mono("Explore", color = colors.neonOrange)

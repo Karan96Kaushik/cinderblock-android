@@ -1,0 +1,27 @@
+{
+  "note": "drawable is the jpg name in res/drawable-nodpi, without the extension. match terms are compared with the workout name. A longer or closer term wins. Scores under minScore use default.",
+  "default": "push",
+  "minScore": 0.45,
+  "images": [
+    {
+      "drawable": "shoulders",
+      "match": ["shoulders", "shoulder", "delt", "overhead", "lateral raise", "ohp"]
+    },
+    {
+      "drawable": "abs",
+      "match": ["abs", "ab", "core", "plank", "crunch", "sit up", "situp", "abdominal"]
+    },
+    {
+      "drawable": "legs",
+      "match": ["legs", "leg", "lower", "squat", "lunge", "glute", "calf", "hamstring", "quad"]
+    },
+    {
+      "drawable": "pull",
+      "match": ["pull", "back", "row", "lat", "deadlift", "bicep", "rear delt", "upper b"]
+    },
+    {
+      "drawable": "push",
+      "match": ["push", "chest", "press", "tricep", "upper a", "upper"]
+    }
+  ]
+}

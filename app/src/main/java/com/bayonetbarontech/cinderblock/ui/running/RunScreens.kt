@@ -86,7 +86,7 @@ fun RunPlanScreen(nav: NavHostController, vm: CinderViewModel) {
             Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            WorkoutCover("lower", "Run")
+            WorkoutCover("Run", "Run")
             DisplayText("Run session", size = 22.sp)
             Mono("Warmup · run · cooldown — ${formatPlan(plan)}")
             if (resumable && active != null) {

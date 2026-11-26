@@ -2,22 +2,24 @@ package com.bayonetbarontech.cinderblock.ui.components
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.bayonetbarontech.cinderblock.R
-
-fun workoutArtwork(group: String): Int =
-    if (group == "lower") R.drawable.lower_body_card else R.drawable.strength_card
+import com.bayonetbarontech.cinderblock.domain.WorkoutImageCatalog
+import com.bayonetbarontech.cinderblock.domain.drawableFor
+import kotlinx.serialization.json.Json
 
 @Composable
 fun CoverImage(
@@ -51,13 +53,39 @@ fun CoachMark(size: Dp = 44.dp, modifier: Modifier = Modifier) {
     )
 }
 
+private val WorkoutImageJson = Json { ignoreUnknownKeys = true }
+
 @Composable
-fun WorkoutCover(group: String, description: String, modifier: Modifier = Modifier) {
+fun rememberWorkoutCatalog(): WorkoutImageCatalog {
+    val context = LocalContext.current
+    return remember {
+        runCatching {
+            WorkoutImageJson.decodeFromString<WorkoutImageCatalog>(
+                context.assets.open("workout-images.json").bufferedReader().use { it.readText() },
+            )
+        }.getOrElse { WorkoutImageCatalog() }
+    }
+}
+
+@Composable
+fun workoutDrawable(label: String): Int {
+    val context = LocalContext.current
+    val catalog = rememberWorkoutCatalog()
+    val name = remember(label, catalog) { catalog.drawableFor(label) }
+    val fallback = catalog.default.ifBlank { "push" }
+    return remember(name, fallback) {
+        fun lookup(drawable: String) = context.resources.getIdentifier(drawable, "drawable", context.packageName)
+        lookup(name).takeIf { it != 0 } ?: lookup(fallback).takeIf { it != 0 } ?: R.drawable.push
+    }
+}
+
+@Composable
+fun WorkoutCover(name: String, description: String, modifier: Modifier = Modifier) {
     CoverImage(
-        workoutArtwork(group),
+        workoutDrawable(name),
         modifier
             .fillMaxWidth()
-            .height(132.dp)
+            .aspectRatio(1f)
             .clip(RoundedCornerShape(16.dp)),
         description,
     )

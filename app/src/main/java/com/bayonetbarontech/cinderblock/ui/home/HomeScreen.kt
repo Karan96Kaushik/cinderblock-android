@@ -61,7 +61,6 @@ import com.bayonetbarontech.cinderblock.domain.bodyTrend
 import com.bayonetbarontech.cinderblock.domain.countStat
 import com.bayonetbarontech.cinderblock.domain.currentWeekRuns
 import com.bayonetbarontech.cinderblock.R
-import com.bayonetbarontech.cinderblock.domain.colorGroup
 import com.bayonetbarontech.cinderblock.domain.dateInRange
 import com.bayonetbarontech.cinderblock.domain.dayStatus
 import com.bayonetbarontech.cinderblock.domain.daySummary
@@ -202,6 +201,12 @@ fun HomeScreen(nav: NavHostController, vm: CinderViewModel) {
                     }
 
                     CardBlock {
+                        val coverName = unfinished?.let { logLabel(program, it.second) }
+                            ?: todayWorkout?.name
+                            ?: todayLabel
+                        if (coverName.isNotBlank() && !coverName.contains("rest", ignoreCase = true)) {
+                            WorkoutCover(coverName, coverName)
+                        }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Mono("Today's plan", size = 12.sp)
@@ -372,7 +377,7 @@ fun HomeScreen(nav: NavHostController, vm: CinderViewModel) {
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             row.forEach { (key, workout) ->
                                 CardBlock(Modifier.weight(1f).clickable { nav.navigate(Routes.explore(key)) }) {
-                                    WorkoutCover(colorGroup(program, key), workout.name)
+                                    WorkoutCover(workout.name, workout.name)
                                     DisplayText(workout.name, size = 16.sp, maxLines = 2)
                                     Mono(scheduleHint(program, key), maxLines = 2)
                                     Mono("${workout.exercises.size} exercises", color = colors.foreground)
