@@ -141,7 +141,7 @@ fun SettingsScreen(nav: NavHostController, vm: CinderViewModel) {
             CardBlock {
                 DisplayText("Training setup", size = 16.sp)
                 Mono("Days, experience, and equipment used to generate your plan.")
-                OutlineButton("Redo setup") { nav.navigate(Routes.Setup) }
+                OutlineButton("Run setup guide", { nav.navigate(Routes.Setup) })
             }
 
             SectionHeader("Training")
@@ -444,8 +444,8 @@ fun SettingsScreen(nav: NavHostController, vm: CinderViewModel) {
 
             SectionHeader("Legal")
             CardBlock {
-                OutlineButton("Terms and conditions") { nav.navigate(Routes.Terms) }
-                OutlineButton("Privacy policy") { nav.navigate(Routes.Privacy) }
+                OutlineButton("Terms and conditions", { nav.navigate(Routes.Terms) })
+                OutlineButton("Privacy policy", { nav.navigate(Routes.Privacy) })
                 Mono("Cinderblock is a training log. It is not a medical device and does not provide medical advice.")
             }
         }

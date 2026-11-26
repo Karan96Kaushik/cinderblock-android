@@ -55,6 +55,7 @@ import com.bayonetbarontech.cinderblock.data.setChatPreview
 import com.bayonetbarontech.cinderblock.data.stopChat
 import com.bayonetbarontech.cinderblock.domain.ChatTurn
 import com.bayonetbarontech.cinderblock.domain.formatVersionLabel
+import com.bayonetbarontech.cinderblock.domain.markdownToPlain
 import com.bayonetbarontech.cinderblock.domain.parseAssistant
 import com.bayonetbarontech.cinderblock.domain.programToPlaintext
 import com.bayonetbarontech.cinderblock.ui.components.CoachMark
@@ -274,7 +275,7 @@ private fun Bubble(turn: ChatTurn, system: Boolean = false) {
                 .padding(10.dp),
         ) {
             Text(
-                turn.content,
+                if (user) turn.content else markdownToPlain(turn.content),
                 color = if (user) colors.primaryForeground else colors.foreground,
                 fontFamily = type.body,
                 fontWeight = if (user) FontWeight.Bold else FontWeight.Normal,

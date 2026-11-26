@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.text.KeyboardOptions
@@ -18,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -58,8 +60,7 @@ fun LoginScreen(nav: NavHostController, vm: CinderViewModel) {
 
     LaunchedEffect(Unit) { vm.controller.clearSkip() }
     fun goNext() {
-        val dest = if (state.profile.completed) Routes.Home else Routes.Setup
-        nav.navigate(dest) {
+        nav.navigate(Routes.Home) {
             popUpTo(nav.graph.id) { inclusive = true }
             launchSingleTop = true
         }
@@ -68,8 +69,16 @@ fun LoginScreen(nav: NavHostController, vm: CinderViewModel) {
         if (state.auth != null && !recovery) goNext()
     }
 
-    Column(Modifier.fillMaxSize().background(colors.background).statusBarsPadding().padding(20.dp)) {
-        ScreenColumn {
+    Column(
+        Modifier.fillMaxSize().background(colors.background).statusBarsPadding().padding(horizontal = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Column(
+            Modifier.weight(1f).fillMaxWidth(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+        ScreenColumn(horizontalAlignment = Alignment.CenterHorizontally) {
             BrandMark(88.dp)
             DisplayText("Cinderblock", size = 32.sp, color = colors.primary, modifier = Modifier.padding(top = 12.dp))
             if (!state.cloud.configured) {
@@ -99,10 +108,10 @@ fun LoginScreen(nav: NavHostController, vm: CinderViewModel) {
                 DisplayText("Optional cloud sync", size = 18.sp)
                 Mono("An account backs up settings, the active plan, and training logs. You can keep using Cinderblock without one.")
                 if (mode != AuthMode.Reset) {
-                    OutlinedTextField(email, { email = it }, label = { Mono("Email") }, modifier = Modifier.padding(top = 12.dp), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email))
+                    OutlinedTextField(email, { email = it }, label = { Mono("Email") }, modifier = Modifier.fillMaxWidth().padding(top = 12.dp), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email))
                     PasswordField("Password", password) { password = it }
                 } else {
-                    OutlinedTextField(email, { email = it }, label = { Mono("Email") }, modifier = Modifier.padding(top = 12.dp), singleLine = true)
+                    OutlinedTextField(email, { email = it }, label = { Mono("Email") }, modifier = Modifier.fillMaxWidth().padding(top = 12.dp), singleLine = true)
                 }
                 Message(error, info)
                 PrimaryButton(
@@ -140,10 +149,11 @@ fun LoginScreen(nav: NavHostController, vm: CinderViewModel) {
                     }
                 }) { Mono("Continue without signing in", color = colors.mutedForeground) }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton({ nav.navigate(Routes.Terms) }) { Mono("Terms", color = colors.mutedForeground) }
-                TextButton({ nav.navigate(Routes.Privacy) }) { Mono("Privacy", color = colors.mutedForeground) }
-            }
+        }
+        }
+        Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), horizontalArrangement = Arrangement.Center) {
+            TextButton({ nav.navigate(Routes.Terms) }) { Mono("Terms", color = colors.mutedForeground) }
+            TextButton({ nav.navigate(Routes.Privacy) }) { Mono("Privacy", color = colors.mutedForeground) }
         }
     }
 }
@@ -157,7 +167,7 @@ private fun PasswordField(label: String, value: String, onChange: (String) -> Un
         visualTransformation = PasswordVisualTransformation(),
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-        modifier = Modifier.padding(top = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
     )
 }
 

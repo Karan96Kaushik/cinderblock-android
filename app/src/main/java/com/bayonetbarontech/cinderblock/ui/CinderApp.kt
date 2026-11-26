@@ -16,6 +16,10 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -31,14 +35,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -87,6 +97,14 @@ fun CinderApp(vm: CinderViewModel = viewModel()) {
     CinderTheme(state.settings.theme, state.settings.fontPreset, state.settings.fontSize) {
         val colors = LocalColors.current
         val view = LocalView.current
+        val focusManager = LocalFocusManager.current
+        val keyboard = LocalSoftwareKeyboardController.current
+        SideEffect {
+            val window = (view.context as Activity).window
+            val controller = WindowCompat.getInsetsController(window, view)
+            controller.isAppearanceLightStatusBars = colors.light
+            controller.isAppearanceLightNavigationBars = colors.light
+        }
         val holdAwake = state.settings.alwaysAwake && (state.rest.running || state.activeRun?.running == true)
         DisposableEffect(holdAwake) {
             val window = (view.context as Activity).window
@@ -117,7 +135,6 @@ fun CinderApp(vm: CinderViewModel = viewModel()) {
                     val needsLogin = state.cloud.configured && state.auth == null && !state.skipLogin
                     when {
                         needsLogin -> Routes.Login
-                        !state.profile.completed -> Routes.Setup
                         else -> Routes.Home
                     }
                 }
@@ -156,8 +173,25 @@ fun CinderApp(vm: CinderViewModel = viewModel()) {
                 val mode = entry?.arguments?.getString("mode")
                 val dock = showsDock(route, mode)
                 val navInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+                val imeInset = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
+                val restingInset = if (dock) 76.dp + navInset else navInset
+                val bottomInset = if (imeInset > restingInset) imeInset else restingInset
                 LaunchedEffect(route) { menu.open = false }
-                Box(Modifier.fillMaxSize().padding(bottom = if (dock) 76.dp + navInset else navInset)) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(bottom = bottomInset)
+                        .pointerInput(focusManager, keyboard) {
+                            awaitEachGesture {
+                                val down = awaitFirstDown(pass = PointerEventPass.Final, requireUnconsumed = false)
+                                val up = waitForUpOrCancellation(pass = PointerEventPass.Final)
+                                if (up != null && !down.isConsumed && !up.isConsumed) {
+                                    focusManager.clearFocus()
+                                    keyboard?.hide()
+                                }
+                            }
+                        },
+                ) {
                     CompositionLocalProvider(LocalMenu provides menu) {
                         CinderNav(nav, vm, start)
                     }

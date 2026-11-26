@@ -60,10 +60,10 @@ fun loggedSetCount(log: ExerciseLog, timed: Boolean): Int =
     log.sets.count { isSetComplete(it, timed) }
 
 fun visibleSetCount(log: ExerciseLog, planned: Int, timed: Boolean): Int {
-    if (isAddressed(log)) return planned.coerceAtLeast(log.sets.size)
-    val last = log.sets.indexOfLast { hasSetData(it) || isSetComplete(it, timed) }
-    if (last < 0) return 1.coerceAtMost(planned.coerceAtLeast(1))
-    return (last + 2).coerceAtMost(planned.coerceAtLeast(log.sets.size))
+    val cap = maxOf(planned, log.sets.size, 1)
+    if (isAddressed(log)) return cap
+    val lastComplete = log.sets.indexOfLast { isSetComplete(it, timed) }
+    return (lastComplete + 2).coerceIn(1, cap)
 }
 
 fun lastNonRest(gym: Map<String, DayLog>): Pair<String, DayLog>? =

@@ -166,6 +166,13 @@ fun HomeScreen(nav: NavHostController, vm: CinderViewModel) {
                 }
 
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    if (!state.profile.completed) {
+                        CardBlock {
+                            DisplayText("Set up your plan", size = 18.sp)
+                            Mono("Answer a few questions and Cinderblock can build a program for you.")
+                            PrimaryButton("Run setup guide", { nav.navigate(Routes.Setup) })
+                        }
+                    }
                     HeroCard(program.name, todayLabel.ifBlank { "Show up. Log the work." })
 
                     unfinished?.let { (date, log) ->

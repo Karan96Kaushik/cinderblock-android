@@ -210,10 +210,15 @@ private fun String.asHeading(): String =
 fun ScreenColumn(
     maxWidth: Dp = 672.dp,
     modifier: Modifier = Modifier,
+    horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
-        Column(modifier.widthIn(max = maxWidth).fillMaxWidth(), content = content)
+        Column(
+            modifier.widthIn(max = maxWidth).fillMaxWidth(),
+            horizontalAlignment = horizontalAlignment,
+            content = content,
+        )
     }
 }
 

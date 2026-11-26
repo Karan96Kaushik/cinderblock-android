@@ -10,6 +10,7 @@ import com.bayonetbarontech.cinderblock.domain.parseAssistant
 import com.bayonetbarontech.cinderblock.domain.planMateriallyChanged
 import com.bayonetbarontech.cinderblock.domain.SetupPhase
 import com.bayonetbarontech.cinderblock.domain.hasSetupAnswers
+import com.bayonetbarontech.cinderblock.domain.markdownToPlain
 import com.bayonetbarontech.cinderblock.domain.mergeAthleteSummary
 import com.bayonetbarontech.cinderblock.domain.programToPlaintext
 import com.bayonetbarontech.cinderblock.domain.setupBrief
@@ -112,12 +113,21 @@ internal suspend fun Controller.sendChat(text: String) {
     val buffer = StringBuilder()
     try {
         val session = ensureAuth()
+        val mode = snapshot().chat.mode
+        val requestSummary = if (mode == "discuss") {
+            listOf(
+                "Reply in a few words. Plain sentences only. Do not use markdown.",
+                summary.trim(),
+            ).filter { it.isNotEmpty() }.joinToString("\n")
+        } else {
+            summary
+        }
         val full = withContext(Dispatchers.IO) {
             cloud.streamChat(
                 config = snapshot().cloud,
                 session = session,
-                mode = snapshot().chat.mode,
-                summary = summary,
+                mode = mode,
+                summary = requestSummary,
                 planContext = planContext,
                 turns = trimmedTurns.recent.dropLast(1),
                 message = trimmed,
@@ -137,7 +147,7 @@ internal suspend fun Controller.sendChat(text: String) {
         }
         val parsed = parseAssistant(clean)
         if (parsed.runningSummary != null) summary = parsed.runningSummary
-        var displayText = parsed.displayText.ifBlank { clean }
+        var displayText = markdownToPlain(parsed.displayText.ifBlank { clean })
         var nextDraft = parsed.plaintextDraft ?: snapshot().chat.plaintextDraft
         var hasPlanDraft = snapshot().chat.hasPlanDraft || parsed.plaintextDraft != null
         var planReady = snapshot().chat.planReady || parsed.planReady

@@ -31,6 +31,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
@@ -47,6 +48,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -74,7 +77,6 @@ import com.bayonetbarontech.cinderblock.domain.formatClock
 import com.bayonetbarontech.cinderblock.domain.formatLongDate
 import com.bayonetbarontech.cinderblock.domain.formatMediumDate
 import com.bayonetbarontech.cinderblock.domain.formatOneSet
-import com.bayonetbarontech.cinderblock.domain.formatSetSummary
 import com.bayonetbarontech.cinderblock.domain.isAddressed
 import com.bayonetbarontech.cinderblock.domain.isProgramKey
 import com.bayonetbarontech.cinderblock.domain.isTimedHold
@@ -82,6 +84,7 @@ import com.bayonetbarontech.cinderblock.domain.lastExerciseRecord
 import com.bayonetbarontech.cinderblock.domain.loggedSetCount
 import com.bayonetbarontech.cinderblock.domain.logLabel
 import com.bayonetbarontech.cinderblock.domain.parseDate
+import com.bayonetbarontech.cinderblock.domain.visibleSetCount
 import com.bayonetbarontech.cinderblock.domain.resolveProgram
 import com.bayonetbarontech.cinderblock.ui.components.CardBlock
 import com.bayonetbarontech.cinderblock.ui.components.DisplayText
@@ -186,7 +189,22 @@ fun SessionScreen(date: String, exercise: String?, nav: NavHostController, vm: C
             val last = lastExerciseRecord(state.gymLog, exercise.name, date)
             val priorSets = last?.second?.sets.orEmpty()
             var notesOpen by remember(exercise.name) { mutableStateOf(false) }
-            Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            val focusManager = LocalFocusManager.current
+            val keyboard = LocalSoftwareKeyboardController.current
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                    ) {
+                        focusManager.clearFocus()
+                        keyboard?.hide()
+                    }
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     DisplayText(
                         exercise.name,
@@ -213,14 +231,23 @@ fun SessionScreen(date: String, exercise: String?, nav: NavHostController, vm: C
                 }
                 last?.let { (lastDate, lastLog) ->
                     val whenLabel = parseDate(lastDate)?.let { formatMediumDate(it) } ?: lastDate
-                    val summary = formatSetSummary(lastLog)
-                    Mono(if (summary.isNullOrBlank()) "Last session · $whenLabel" else "Last session · $whenLabel · $summary")
+                    Mono("Last session · $whenLabel", color = colors.foreground)
+                    val priorPills = lastLog.sets.mapNotNull(::formatOneSet)
+                    if (priorPills.isNotEmpty()) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            priorPills.forEach { Pill(it, colors.neonAmber) }
+                        }
+                    }
                 }
                 DisplayText("Log sets", size = 14.sp)
                 if (item != null) {
-                    item.sets.forEachIndexed { index, set ->
+                    val visible = visibleSetCount(item, planned, timed)
+                    item.sets.take(visible).forEachIndexed { index, set ->
                         val prior = priorSets.getOrNull(index)?.let(::formatOneSet)
-                        Mono(if (prior == null) "Set ${index + 1}" else "Set ${index + 1} · last $prior")
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Mono("Set ${index + 1}", color = colors.foreground)
+                            if (prior != null) Pill(prior, colors.neonAmber)
+                        }
                         val onFocus = {
                             scope.launch { vm.controller.focusSet(date, exercise.name, index) }
                             Unit

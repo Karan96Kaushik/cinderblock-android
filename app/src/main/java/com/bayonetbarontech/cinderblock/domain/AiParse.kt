@@ -38,11 +38,29 @@ fun parseAssistant(raw: String, streaming: Boolean = false): ParsedAssistant {
     }
     if (streaming) working = scrubPartial(working)
     return ParsedAssistant(
-        displayText = working.replace(Regex("\n{3,}"), "\n\n").trim(),
+        displayText = markdownToPlain(working),
         runningSummary = summary,
         plaintextDraft = draft,
         planReady = ready,
     )
+}
+
+fun markdownToPlain(raw: String): String {
+    var text = raw.replace("\r\n", "\n")
+    text = text.replace(Regex("```[a-zA-Z0-9_-]*\\n?"), "")
+    text = text.replace("```", "")
+    text = text.replace(Regex("!\\[([^\\]]*)]\\([^)]*\\)"), "$1")
+    text = text.replace(Regex("\\[([^\\]]+)]\\([^)]*\\)"), "$1")
+    text = text.replace(Regex("(?m)^#{1,6}\\s*"), "")
+    text = text.replace(Regex("\\*\\*([^*]+)\\*\\*"), "$1")
+    text = text.replace(Regex("__([^_]+)__"), "$1")
+    text = text.replace(Regex("(?<!\\*)\\*([^*\\n]+)\\*(?!\\*)"), "$1")
+    text = text.replace(Regex("(?<!_)_([^_\\n]+)_(?!_)"), "$1")
+    text = text.replace(Regex("`([^`]+)`"), "$1")
+    text = text.replace(Regex("(?m)^\\s*[-*+]\\s+"), "")
+    text = text.replace(Regex("(?m)^\\s*>\\s?"), "")
+    text = text.replace(Regex("(?m)^\\s*\\d+\\.\\s+"), "")
+    return text.replace(Regex("[ \\t]+\\n"), "\n").replace(Regex("\n{3,}"), "\n\n").trim()
 }
 
 private fun scrubPartial(text: String): String {
