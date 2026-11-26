@@ -34,8 +34,8 @@ android {
         applicationId = "com.bayonetbarontech.cinderblock"
         minSdk = 26
         targetSdk = 36
-        versionCode = 20026
-        versionName = "2.0.26"
+        versionCode = 61
+        versionName = "0.6.1"
 
         // Optional. Leave blank for the local-only app. See assets/cloud.json.
         buildConfigField("String", "SUPABASE_URL", "\"${secret("SUPABASE_URL")}\"")
